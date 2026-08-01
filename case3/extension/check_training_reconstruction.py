@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from joint_generate import generate_joint_samples
-from joint_jit_model import JointJiT
+from joint_OPFT_model import JointOPFT
 from main_joint import corey_tables
 
 
@@ -60,7 +60,7 @@ def arguments():
         default="raw",
         help="checkpoint weights to evaluate; old joint checkpoints must use raw",
     )
-    parser.add_argument("--backbone", default="jit_small")
+    parser.add_argument("--backbone", default="OPFT_small")
     parser.add_argument("--patch-size", type=int, default=32)
     parser.add_argument("--seed", type=int, default=20260729)
     parser.add_argument(
@@ -82,7 +82,7 @@ def inverse_scale(values, minimum, maximum):
 
 
 def load_model(args, device):
-    model = JointJiT(
+    model = JointOPFT(
         backbone=args.backbone,
         patch_size=(args.patch_size, args.patch_size),
     ).to(device)

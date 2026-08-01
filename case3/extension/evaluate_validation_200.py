@@ -11,7 +11,7 @@ import numpy as np
 import torch
 
 from joint_generate import generate_joint_samples
-from joint_jit_model import JointJiT
+from joint_OPFT_model import JointOPFT
 from main_joint import load_weights
 
 
@@ -64,7 +64,7 @@ def arguments():
     parser.add_argument("--num-steps", type=int, default=30)
     parser.add_argument("--cfg-scale", type=float, default=1.0)
     parser.add_argument("--t-eps", type=float, default=5e-2)
-    parser.add_argument("--backbone", default="jit_small")
+    parser.add_argument("--backbone", default="OPFT_small")
     parser.add_argument("--patch-size", type=int, default=32)
     parser.add_argument("--weights", choices=("raw", "ema"), default="raw")
     parser.add_argument("--seed", type=int, default=20260730)
@@ -255,7 +255,7 @@ def main():
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
     normalization = dict(np.load(args.normalization))
-    model = JointJiT(
+    model = JointOPFT(
         backbone=args.backbone,
         patch_size=(args.patch_size, args.patch_size),
     ).to(args.device)

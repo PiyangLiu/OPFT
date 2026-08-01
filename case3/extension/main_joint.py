@@ -12,7 +12,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from joint_generate import generate_joint_samples
-from joint_jit_model import JointJiT
+from joint_OPFT_model import JointOPFT
 from joint_train_functions import train_joint_model
 
 
@@ -35,7 +35,7 @@ def arguments():
         default=ROOT / "post_data_joint.h5",
         help="posterior HDF5 path used in generate mode",
     )
-    parser.add_argument("--backbone", default="jit_small")
+    parser.add_argument("--backbone", default="OPFT_small")
     parser.add_argument("--patch-size", type=int, default=32)
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--num-workers", type=int, default=0)
@@ -127,7 +127,7 @@ def load_training_arrays(path, train_count):
 
 
 def make_model(args):
-    return JointJiT(
+    return JointOPFT(
         backbone=args.backbone,
         patch_size=(args.patch_size, args.patch_size),
     ).to(args.device)

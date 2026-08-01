@@ -11,7 +11,7 @@ import sys
 import torch.serialization
 
 
-from OPFT import JiT_MODELS
+from OPFT import OPFT_MODELS
 from utils import EMA
 from train_functions import train_main
 from generate import generate_samples
@@ -42,7 +42,7 @@ def parse_patch_size(s):
 
 def get_params():
     parser = argparse.ArgumentParser(
-        description="JiT for flow matching oil reservoir inversion (No PCA)"
+        description="OPFT for flow matching oil reservoir inversion (No PCA)"
     )
 
     parser.add_argument(
@@ -73,8 +73,8 @@ def get_params():
     parser.add_argument(
         "--model_name",
         type=str,
-        default="jit_overlap_simple",
-        help="JiT model variant",
+        default="OPFT_small",
+        help="OPFT model variant",
     )
     parser.add_argument(
         "--patch_size",
@@ -337,7 +337,7 @@ def test_generate(initial_res, args, config):
     data_min = initial_res["data_min"]
     dataloader = initial_res["dataloader"]
 
-    jit_model = JiT_MODELS[args.model_name](
+    opft_model = OPFT_MODELS[args.model_name](
         patch_size=args.patch_size,
         obs_dim=args.cdim,
         attn_drop=args.attn_drop,
@@ -360,7 +360,7 @@ def test_generate(initial_res, args, config):
             else:
                 print(f"Filtered transient buffer key: {k}")
 
-        missing_keys, unexpected_keys = jit_model.load_state_dict(
+        missing_keys, unexpected_keys = opft_model.load_state_dict(
             filtered_state_dict, strict=False
         )
 
@@ -376,7 +376,7 @@ def test_generate(initial_res, args, config):
         print(f"Failed to load checkpoint: {e}")
         return None
 
-    jit_model.eval()
+    opft_model.eval()
 
     print("\n=== Generate three training-set samples ===")
 
@@ -393,7 +393,7 @@ def test_generate(initial_res, args, config):
 
     with torch.no_grad():
         gen_train = generate_samples(
-            jit_model, lab_train, args, config, method=args.integrate_method
+            opft_model, lab_train, args, config, method=args.integrate_method
         )
 
     print(f"Generated training-sample shape: {gen_train.shape}")
@@ -498,7 +498,7 @@ def test_generate(initial_res, args, config):
         with torch.no_grad():
 
             gen_sample = generate_samples(
-                jit_model, lab_test, args, config, method=args.integrate_method
+                opft_model, lab_test, args, config, method=args.integrate_method
             )
         generated_data.append(gen_sample)
 
@@ -546,7 +546,7 @@ def main():
         rootpath = initial_res["rootpath"]
         os.chdir(rootpath)
 
-        jit_model = JiT_MODELS[args.model_name](
+        opft_model = OPFT_MODELS[args.model_name](
             patch_size=args.patch_size,
             obs_dim=args.cdim,
             attn_drop=args.attn_drop,
@@ -565,7 +565,7 @@ def main():
 
         t1 = time.time()
         train_losses, val_losses, best_val_loss = train_main(
-            jit_model, initial_res["dataloader"], initial_res["testloader"], args
+            opft_model, initial_res["dataloader"], initial_res["testloader"], args
         )
         t2 = time.time()
         print(
