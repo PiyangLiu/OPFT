@@ -40,7 +40,7 @@ All arrays contain finite values. The model code reshapes each permeability vect
 
 - Training indices: `[0, 1000)`
 - Evaluation indices: `[1000, 1200)`
-- Permeability transform: `ln(k + 1)`
+- Permeability transform: `lnk`
 - Field normalization: per-cell min-max normalization to `[-1, 1]`
 - Observation normalization: per-feature min-max normalization to `[-1, 1]`
 
