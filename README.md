@@ -92,7 +92,7 @@ The script places the verified file at `case1/train_data.h5`. Its SHA-256 checks
 - `true_para`: shape `(3600, 1)`, the reference permeability field;
 - `dobstrue`: shape `(500, 1)`, the corresponding reference observation vector.
 
-The code uses samples 0-999 for training and samples 1000-1199 for evaluation. Permeability is transformed with `ln(k + 1)` and both fields and observations are min-max normalized to `[-1, 1]`.
+The code uses samples 0-999 for training and samples 1000-1199 for evaluation. Permeability is transformed with `lnk` and both fields and observations are min-max normalized to `[-1, 1]`.
 
 See [DATASET.md](DATASET.md) for the complete data and licensing notes.
 
