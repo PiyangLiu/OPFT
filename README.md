@@ -1,6 +1,6 @@
 # OPFT
 
-[中文说明](README_zh-CN.md)
+
 
 Official implementation of the Overlapping Patch Fusion Transformer (OPFT) described in *Monitoring-Informed Generative Inverse Modeling for Geological CO2 Storage Using an Overlapping Patch Fusion Transformer*.
 
