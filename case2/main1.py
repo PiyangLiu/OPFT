@@ -50,7 +50,7 @@ def parse_patch_size(s):
         return tuple(map(int, s.split(",")))
     except ValueError:
         raise argparse.ArgumentTypeError(
-            "patch_size必须是用逗号分隔的两个整数，如'16,16'"
+            "patch_size must contain two comma-separated integers, for example '16,16'"
         )
 
 
@@ -59,63 +59,106 @@ def get_params():
         description="JiT for flow matching oil reservoir inversion (No PCA)"
     )
 
-    parser.add_argument("--batchsize", type=int, default=32, help="批大小")
-    parser.add_argument("--numworkers", type=int, default=0, help="数据加载线程数")
-    parser.add_argument("--inch", type=int, default=1, help="输入通道数")
-    parser.add_argument("--cdim", type=int, default=500, help="条件观测数据维度")
+    parser.add_argument("--batchsize", type=int, default=32, help="Batch size")
     parser.add_argument(
-        "--model_name", type=str, default="jit_small", help="JiT模型类型"
+        "--numworkers", type=int, default=0, help="Number of data-loader workers"
+    )
+    parser.add_argument("--inch", type=int, default=1, help="Number of input channels")
+    parser.add_argument(
+        "--cdim",
+        type=int,
+        default=500,
+        help="Dimension of the conditioning observations",
     )
     parser.add_argument(
-        "--patch_size", type=parse_patch_size, default="20,20", help="图像分块大小"
-    )
-    parser.add_argument("--attn_drop", type=float, default=0, help="注意力层dropout率")
-    parser.add_argument(
-        "--proj_drop", type=float, default=0, help="注意力投影层dropout率"
-    )
-    parser.add_argument("--lr", type=float, default=1e-4, help="初始学习率")
-    parser.add_argument("--epochs", type=int, default=500, help="训练总轮数")
-    parser.add_argument("--ema_decay", type=float, default=0.9999, help="EMA权重衰减率")
-    parser.add_argument(
-        "--weight_decay", type=float, default=1e-4, help="AdamW权重衰减"
+        "--model_name", type=str, default="jit_small", help="JiT model variant"
     )
     parser.add_argument(
-        "--t_eps", type=float, default=5e-2, help="流匹配损失中的数值稳定项"
+        "--patch_size", type=parse_patch_size, default="20,20", help="Image patch size"
     )
     parser.add_argument(
-        "--output_dir", type=str, default="./model_ckpt", help="模型权重保存目录"
+        "--attn_drop", type=float, default=0, help="Attention dropout rate"
     )
-    parser.add_argument("--gpu", type=int, default=0, help="GPU设备ID")
-    parser.add_argument("--rank", type=int, default=0, help="分布式训练排名")
-    parser.add_argument("--local_rank", default=-1, type=int, help="分布式训练节点排名")
+    parser.add_argument(
+        "--proj_drop", type=float, default=0, help="Attention projection dropout rate"
+    )
+    parser.add_argument("--lr", type=float, default=1e-4, help="Initial learning rate")
+    parser.add_argument(
+        "--epochs", type=int, default=500, help="Number of training epochs"
+    )
+    parser.add_argument(
+        "--ema_decay", type=float, default=0.9999, help="EMA decay rate"
+    )
+    parser.add_argument(
+        "--weight_decay", type=float, default=1e-4, help="AdamW weight decay"
+    )
+    parser.add_argument(
+        "--t_eps",
+        type=float,
+        default=5e-2,
+        help="Numerical stability term in the flow-matching loss",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="./model_ckpt",
+        help="Model checkpoint directory",
+    )
+    parser.add_argument("--gpu", type=int, default=0, help="GPU device ID")
+    parser.add_argument("--rank", type=int, default=0, help="Distributed training rank")
+    parser.add_argument(
+        "--local_rank", default=-1, type=int, help="Distributed local rank"
+    )
 
-    parser.add_argument("--P_mean", type=float, default=-0.8, help="时间步采样均值参数")
-    parser.add_argument("--P_std", type=float, default=0.8, help="时间步采样标准差参数")
     parser.add_argument(
-        "--label_drop_prob", type=float, default=0.15, help="标签丢弃概率"
-    )
-    parser.add_argument("--cfg_scale", type=float, default=1, help="CFG引导强度")
-    parser.add_argument(
-        "--cfg_interval_min", type=float, default=0.0, help="CFG生效的最小时间步"
+        "--P_mean",
+        type=float,
+        default=-0.8,
+        help="Mean parameter for time-step sampling",
     )
     parser.add_argument(
-        "--cfg_interval_max", type=float, default=1.0, help="CFG生效的最大时间步"
+        "--P_std",
+        type=float,
+        default=0.8,
+        help="Standard-deviation parameter for time-step sampling",
+    )
+    parser.add_argument(
+        "--label_drop_prob", type=float, default=0.15, help="Condition-drop probability"
+    )
+    parser.add_argument(
+        "--cfg_scale", type=float, default=1, help="Classifier-free guidance scale"
+    )
+    parser.add_argument(
+        "--cfg_interval_min",
+        type=float,
+        default=0.0,
+        help="Lower bound of the CFG interval",
+    )
+    parser.add_argument(
+        "--cfg_interval_max",
+        type=float,
+        default=1.0,
+        help="Upper bound of the CFG interval",
     )
 
-    parser.add_argument("--num_steps", type=int, default=15, help="ODE积分步数")
-    parser.add_argument("--noise_scale", type=float, default=1, help="初始噪声强度")
+    parser.add_argument(
+        "--num_steps", type=int, default=15, help="Number of ODE integration steps"
+    )
+    parser.add_argument(
+        "--noise_scale", type=float, default=1, help="Initial noise scale"
+    )
     parser.add_argument(
         "--integrate_method",
         type=str,
         default="rk4",
         choices=["euler", "heun", "rk4"],
-        help="ODE积分方法",
+        help="ODE integration method",
     )
     parser.add_argument(
         "--gen_model_path",
         type=str,
         default="./model_ckpt/model_best.pth",
-        help="生成时加载的模型路径",
+        help="Checkpoint path used for generation",
     )
 
     args = parser.parse_args()
@@ -164,11 +207,11 @@ def initial(args):
     with h5py.File(path + "/train_data.h5", "r") as f:
         data_ = f["x"][:]
         cond = f["y"][:]
-    print(f"原始数据形状: data_={data_.shape}, cond={cond.shape}")
+    print(f"Raw data shapes: data_={data_.shape}, cond={cond.shape}")
     data_ = np.log(data_ + 1)
 
     data = data_.reshape(-1, 1, 60, 60)
-    print(f"重塑后数据形状: data={data.shape}")
+    print(f"Reshaped data shape: data={data.shape}")
 
     with h5py.File(rootpath + "/data/ini_data.h5", "r") as f:
         dobstrue = f["dobstrue"][:]
@@ -178,7 +221,9 @@ def initial(args):
     true_para = true_para_.reshape(1, 1, 60, 60)
     true_para = torch.tensor(true_para, dtype=torch.float32)
     dobstrue = torch.tensor(dobstrue.reshape(1, -1), dtype=torch.float32)
-    print(f"真实参数形状: true_para={true_para.shape}, dobstrue={dobstrue.shape}")
+    print(
+        f"Reference parameter shapes: true_para={true_para.shape}, dobstrue={dobstrue.shape}"
+    )
 
     data_max = np.max(data, axis=0)
     data_min = np.min(data, axis=0)
@@ -187,8 +232,8 @@ def initial(args):
     data_norm = np.clip(data_norm, 0, 1)
     data_norm = data_norm * 2 - 1
     data_norm = torch.tensor(data_norm, dtype=torch.float32)
-    print(f"原始数据最小值: {data_min.min()}")
-    print(f"原始数据最大值: {data_max.max()}")
+    print(f"Raw data minimum: {data_min.min()}")
+    print(f"Raw data maximum: {data_max.max()}")
 
     cond_max = np.max(cond, axis=0)
     cond_min = np.min(cond, axis=0)
@@ -198,8 +243,8 @@ def initial(args):
     cond_norm = cond_norm * 2 - 1
     cond_norm = torch.tensor(cond_norm, dtype=torch.float32)
 
-    print(f"data_norm 范围: [{data_norm.min():.4f}, {data_norm.max():.4f}]")
-    print(f"cond_norm 范围: [{cond_norm.min():.4f}, {cond_norm.max():.4f}]")
+    print(f"data_norm range: [{data_norm.min():.4f}, {data_norm.max():.4f}]")
+    print(f"cond_norm range: [{cond_norm.min():.4f}, {cond_norm.max():.4f}]")
 
     vis_dir = os.path.join(rootpath, "data")
     os.makedirs(vis_dir, exist_ok=True)
@@ -277,27 +322,27 @@ def test_generate(initial_res, args, config):
             if not any(unwanted_key in k for unwanted_key in unwanted_keys):
                 filtered_state_dict[k] = v
             else:
-                print(f"已过滤无效键：{k}")
+                print(f"Filtered transient buffer key: {k}")
 
         missing_keys, unexpected_keys = jit_model.load_state_dict(
             filtered_state_dict, strict=False
         )
 
         if missing_keys:
-            print(f"警告：以下键缺失：{missing_keys}")
+            print(f"Warning: missing keys: {missing_keys}")
         if unexpected_keys:
-            print(f"警告：以下键未使用：{unexpected_keys}")
+            print(f"Warning: unexpected keys: {unexpected_keys}")
 
         print(
-            f"成功加载模型: {args.gen_model_path} | 训练轮数: {checkpoint['epoch']} | 损失: {checkpoint['loss']:.6f}"
+            f"Loaded checkpoint: {args.gen_model_path} | epoch: {checkpoint['epoch']} | loss: {checkpoint['loss']:.6f}"
         )
     except Exception as e:
-        print(f"加载模型失败: {e}")
+        print(f"Failed to load checkpoint: {e}")
         return None
 
     jit_model.eval()
 
-    print("\n=== 测试训练集样本生成（3个样本） ===")
+    print("\n=== Generate three training-set samples ===")
 
     batch = next(iter(dataloader))
     x_train_orig = batch[0]
@@ -307,15 +352,15 @@ def test_generate(initial_res, args, config):
     x_train_orig = x_train_orig[:n_show].to(device)
     lab_train = lab_train[:n_show].to(device)
 
-    print(f"原始训练集样本形状: {x_train_orig.shape}")
-    print(f"训练集条件数据形状: {lab_train.shape}")
+    print(f"Original training-sample shape: {x_train_orig.shape}")
+    print(f"Training-condition shape: {lab_train.shape}")
 
     with torch.no_grad():
         gen_train = generate_samples(
             jit_model, lab_train, args, config, method=args.integrate_method
         )
 
-    print(f"生成训练集样本形状: {gen_train.shape}")
+    print(f"Generated training-sample shape: {gen_train.shape}")
 
     gen_train = gen_train.detach().cpu()
     x_train_orig = x_train_orig.detach().cpu()
@@ -331,7 +376,7 @@ def test_generate(initial_res, args, config):
         original_denorm = denormalize_data_no_exp(x_train_orig[i], data_min, data_max)
         original_samples_denorm.append(original_denorm)
         print(
-            f"样本{i} 原始log(x+1)范围: [{original_denorm.min():.4f}, {original_denorm.max():.4f}]"
+            f"Sample {i} original ln(x + 1) range: [{original_denorm.min():.4f}, {original_denorm.max():.4f}]"
         )
 
     generated_samples_denorm = []
@@ -339,10 +384,10 @@ def test_generate(initial_res, args, config):
         generated_denorm = denormalize_data_no_exp(gen_train[i], data_min, data_max)
         generated_samples_denorm.append(generated_denorm)
         print(
-            f"样本{i} 生成log(x+1)范围: [{generated_denorm.min():.4f}, {generated_denorm.max():.4f}]"
+            f"Sample {i} generated ln(x + 1) range: [{generated_denorm.min():.4f}, {generated_denorm.max():.4f}]"
         )
 
-    print("\n=== 生成样本与原始样本误差统计 ===")
+    print("\n=== Error statistics for generated and original samples ===")
     for i in range(n_show):
         mse = torch.mean(
             (original_samples_denorm[i] - generated_samples_denorm[i]) ** 2
@@ -350,7 +395,7 @@ def test_generate(initial_res, args, config):
         mae = torch.mean(
             torch.abs(original_samples_denorm[i] - generated_samples_denorm[i])
         )
-        print(f"样本{i} - MSE: {mse.item():.6f}, MAE: {mae.item():.6f}")
+        print(f"Sample {i} - MSE: {mse.item():.6f}, MAE: {mae.item():.6f}")
 
     channel_idx = 0
 
@@ -359,10 +404,10 @@ def test_generate(initial_res, args, config):
 
     for i in range(n_show):
         print(
-            f"样本{i} 第0通道原始log(x+1)范围: [{original_samples_ch0[i].min():.4f}, {original_samples_ch0[i].max():.4f}]"
+            f"Sample {i} channel-0 original ln(x + 1) range: [{original_samples_ch0[i].min():.4f}, {original_samples_ch0[i].max():.4f}]"
         )
         print(
-            f"样本{i} 第0通道生成log(x+1)范围: [{generated_samples_ch0[i].min():.4f}, {generated_samples_ch0[i].max():.4f}]"
+            f"Sample {i} channel-0 generated ln(x + 1) range: [{generated_samples_ch0[i].min():.4f}, {generated_samples_ch0[i].max():.4f}]"
         )
 
     sample_names = [f"Training Sample {i}" for i in range(n_show)]
@@ -385,7 +430,7 @@ def test_generate(initial_res, args, config):
     save_path = os.path.join(rootpath, "comparison_layer1.png")
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
-    print(f"可视化对比图已保存到: {save_path}")
+    print(f"Comparison figure saved to: {save_path}")
 
     save_data = {
         "original_samples": torch.stack(original_samples_denorm).numpy(),
@@ -400,9 +445,11 @@ def test_generate(initial_res, args, config):
         f.create_dataset("original_norm", data=save_data["original_norm"])
         f.create_dataset("generated_norm", data=save_data["generated_norm"])
 
-    print(f"对比数据已保存到: {os.path.join(rootpath, 'train_samples_comparison.h5')}")
+    print(
+        f"Comparison data saved to: {os.path.join(rootpath, 'train_samples_comparison.h5')}"
+    )
 
-    print("\n=== 生成真实样本（50次） ===")
+    print("\n=== Generate 50 target samples ===")
     lab_test = torch.tensor(dobstrue_norm.reshape(1, -1), dtype=torch.float32).to(
         device
     )
@@ -410,11 +457,11 @@ def test_generate(initial_res, args, config):
     t3 = time.time()
 
     set_gen_seed(config.gen_seed)
-    print(f"已固定生成50个样本的随机种子: {config.gen_seed}")
+    print(f"Random seed for 50 generated samples: {config.gen_seed}")
 
     for i in range(50):
         if i % 10 == 0:
-            print(f"生成第 {i} 个真实样本...")
+            print(f"Generating target sample {i}...")
         with torch.no_grad():
             gen_sample = generate_samples(
                 jit_model, lab_test, args, config, method=args.integrate_method
@@ -422,23 +469,27 @@ def test_generate(initial_res, args, config):
         generated_data.append(gen_sample)
 
     generated_data = torch.stack(generated_data, dim=0).squeeze(1).detach().cpu()
-    print(f"真实样本生成结果形状: {generated_data.shape}")
+    print(f"Generated target-sample shape: {generated_data.shape}")
 
     gen_data_ = generated_data / 2 + 0.5
     gen_data1 = gen_data_ * (data_max - data_min) + data_min
-    print(f"生成样本反归一化后范围: [{gen_data1.min():.4f}, {gen_data1.max():.4f}]")
+    print(
+        f"Denormalized generated-sample range: [{gen_data1.min():.4f}, {gen_data1.max():.4f}]"
+    )
 
     gen_data = torch.clamp(gen_data1, min=0.0)
-    print(f"生成样本反归一化并截断后范围: [{gen_data.min():.4f}, {gen_data.max():.4f}]")
+    print(
+        f"Clipped denormalized generated-sample range: [{gen_data.min():.4f}, {gen_data.max():.4f}]"
+    )
 
     gen_data_ex = np.exp(gen_data) - 1
     final_inv_para = gen_data_ex.reshape(gen_data_ex.shape[0], -1)
-    print(f"生成样本展平后形状: {final_inv_para.shape}")
+    print(f"Flattened generated-sample shape: {final_inv_para.shape}")
 
     save_path = "post_data.h5"
     with h5py.File(save_path, "w") as f:
         f.create_dataset("data", data=final_inv_para)
-    print(f"生成的50个样本已保存为 {save_path} (形状: {final_inv_para.shape})")
+    print(f"Saved 50 generated samples to {save_path} (shape: {final_inv_para.shape})")
     t4 = time.time()
     print(f"Sampling time: {t4-t3:.2f} seconds")
 
@@ -451,13 +502,13 @@ def main():
     config = Config()
     if torch.cuda.is_available():
         print(
-            f"\n初始GPU显存使用: {torch.cuda.memory_allocated(0) / 1024 ** 2:.2f} MiB"
+            f"\nInitial GPU memory usage: {torch.cuda.memory_allocated(0) / 1024 ** 2:.2f} MiB"
         )
 
     mode = 1
     if mode == 0:
 
-        print("=== 启动JiT模型训练（改进版） ===")
+        print("=== Start OPFT training ===")
         rootpath = initial_res["rootpath"]
         os.chdir(rootpath)
 
@@ -469,11 +520,13 @@ def main():
             img_size=config.image_size,
         ).to(config.device)
 
-        print(f"训练参数配置:")
-        print(f"  - 时间步参数: P_mean={args.P_mean}, P_std={args.P_std}")
-        print(f"  - 标签丢弃概率: {args.label_drop_prob} (使用固定特殊值0)")
+        print(f"Training configuration:")
+        print(f"  - Time-step parameters: P_mean={args.P_mean}, P_std={args.P_std}")
         print(
-            f"  - CFG参数: scale={args.cfg_scale}, interval=[{args.cfg_interval_min}, {args.cfg_interval_max}]"
+            f"  - Condition-drop probability: {args.label_drop_prob} (fixed unconditional sentinel)"
+        )
+        print(
+            f"  - CFG parameters: scale={args.cfg_scale}, interval=[{args.cfg_interval_min}, {args.cfg_interval_max}]"
         )
 
         t1 = time.time()
@@ -481,7 +534,9 @@ def main():
             jit_model, initial_res["dataloader"], initial_res["testloader"], args
         )
         t2 = time.time()
-        print(f"训练完成 | 总耗时: {t2 - t1:.2f}秒 | 最优验证损失: {best_val_loss:.6f}")
+        print(
+            f"Training completed | elapsed time: {t2 - t1:.2f} s | best validation loss: {best_val_loss:.6f}"
+        )
 
         loss_fig_path = os.path.join(args.output_dir, "train_val_loss.png")
         plt.figure(figsize=(10, 6))
@@ -496,7 +551,7 @@ def main():
         plt.close()
     elif mode == 1:
 
-        print("=== 启动样本生成（改进版） ===")
+        print("=== Start sample generation ===")
         test_generate(initial_res, args, config)
 
 
