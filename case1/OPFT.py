@@ -145,18 +145,14 @@ class OverlapPatchEmbed(nn.Module):
             in_chans, embed_dim, kernel_size=patch_size, stride=stride
         )
 
-        print(f"重叠Patch嵌入配置:")
-        print(f"  输入尺寸: {img_size}")
-        print(f"  Patch大小: {patch_size}")
-        print(f"  步长: {stride} ({(1 - stride[0] / patch_size[0]) * 100:.1f}% 重叠)")
-        print(f"  Patch网格: {self.grid_h}×{self.grid_w} = {self.num_patches}个patch")
+
 
     def forward(self, x):
 
         B, C, H, W = x.shape
         assert (
             H == self.img_size[0] and W == self.img_size[1]
-        ), f"输入尺寸({H},{W})与预期({self.img_size[0]},{self.img_size[1]})不匹配"
+        )
 
         x = self.proj(x)
         x = x.flatten(2).transpose(1, 2)
@@ -341,12 +337,6 @@ class ShiftedConvFusion(nn.Module):
 
         self._init_weights()
 
-        print(f"移位卷积融合配置:")
-        print(f"  输入尺寸: {img_size}")
-        print(f"  Patch大小: {patch_size}")
-        print(f"  步长: {stride}")
-        print(f"  Patch网格: {self.grid_h}×{self.grid_w} = {self.num_patches}个patch")
-        print(f"  可学习权重: {use_learnable_weights}")
 
     def _build_fusion_net(self):
 
@@ -566,7 +556,7 @@ class JiTWithShiftedConv(nn.Module):
         B, C, H, W = x.shape
         assert (
             H == self.original_img_size[0] and W == self.original_img_size[1]
-        ), f"输入图像尺寸应为{self.original_img_size}，但得到({H}, {W})"
+        )
 
         x_patches = self.patch_embed(x)
         x_patches = x_patches + self.pos_embed
@@ -586,10 +576,10 @@ class JiTWithShiftedConv(nn.Module):
 
         patch_pixels = patch_h * patch_w
         expected_dim = out_chans * patch_pixels
-        assert D == expected_dim, f"输出维度{D}与期望的{expected_dim}不匹配"
+        assert D == expected_dim
         assert (
             N == self.patch_embed.num_patches
-        ), f"Patch数量{N}与预期{self.patch_embed.num_patches}不匹配"
+        )
 
         patches = x_out.view(B, N, out_chans, patch_h, patch_w)
 
