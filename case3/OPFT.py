@@ -62,7 +62,7 @@ class VisionRotaryEmbeddingFast(nn.Module):
 
         t = torch.arange(seq_len, device=device, dtype=dtype)
 
-        assert self.dim % 2 == 0, f"dim必须为偶数，当前为{self.dim}"
+        assert self.dim % 2 == 0, f"dim must be even; received {self.dim}"
 
         inv_freq = 1.0 / (
             10000
@@ -85,7 +85,9 @@ class VisionRotaryEmbeddingFast(nn.Module):
 
         B, num_heads, seq_len, head_dim = x.shape
 
-        assert head_dim == self.dim, f"head_dim({head_dim})必须等于dim({self.dim})"
+        assert (
+            head_dim == self.dim
+        ), f"head_dim ({head_dim}) must equal dim ({self.dim})"
 
         if (
             self.cos_cached.shape[0] == 0
@@ -108,7 +110,7 @@ class VisionRotaryEmbeddingFast(nn.Module):
     @staticmethod
     def apply_rotary_pos_emb(t, cos, sin):
 
-        assert t.shape[-1] % 2 == 0, f"head_dim必须是偶数，当前为{t.shape[-1]}"
+        assert t.shape[-1] % 2 == 0, f"head_dim must be even; received {t.shape[-1]}"
 
         t_half = t.shape[-1] // 2
         t1, t2 = t[..., :t_half], t[..., t_half:]
@@ -162,18 +164,20 @@ class OverlapPatchEmbed(nn.Module):
             in_chans, embed_dim, kernel_size=patch_size, stride=stride
         )
 
-        print(f"重叠Patch嵌入配置:")
-        print(f"  输入尺寸: {img_size}")
-        print(f"  Patch大小: {patch_size}")
-        print(f"  步长: {stride} ({(1 - stride[0] / patch_size[0]) * 100:.1f}% 重叠)")
-        print(f"  Patch网格: {self.grid_h}×{self.grid_w} = {self.num_patches}个patch")
+        print(f"Overlapping-patch embedding configuration:")
+        print(f"  Input size: {img_size}")
+        print(f"  Patch size: {patch_size}")
+        print(
+            f"  Stride: {stride} ({(1 - stride[0] / patch_size[0]) * 100:.1f}% overlap)"
+        )
+        print(f"  Patch grid: {self.grid_h}x{self.grid_w} = {self.num_patches} patches")
 
     def forward(self, x):
 
         B, C, H, W = x.shape
         assert (
             H == self.img_size[0] and W == self.img_size[1]
-        ), f"输入尺寸({H},{W})与预期({self.img_size[0]},{self.img_size[1]})不匹配"
+        ), f"Input size ({H}, {W}) does not match expected size ({self.img_size[0]}, {self.img_size[1]})"
 
         x = self.proj(x)
         x = x.flatten(2).transpose(1, 2)
@@ -233,7 +237,9 @@ class Attention(nn.Module):
         self.head_dim = dim // num_heads
         self.scale = self.head_dim**-0.5
 
-        assert dim % num_heads == 0, f"dim({dim})必须能被num_heads({num_heads})整除"
+        assert (
+            dim % num_heads == 0
+        ), f"dim ({dim}) must be divisible by num_heads ({num_heads})"
 
         self.qkv = nn.Linear(dim, dim * 3, bias=True)
         self.attn_drop = nn.Dropout(attn_drop)
@@ -364,12 +370,12 @@ class ShiftedConvFusion(nn.Module):
 
         self._init_weights()
 
-        print(f"移位卷积融合配置:")
-        print(f"  输入尺寸: {img_size}")
-        print(f"  Patch大小: {patch_size}")
-        print(f"  步长: {stride}")
-        print(f"  Patch网格: {self.grid_h}×{self.grid_w} = {self.num_patches}个patch")
-        print(f"  可学习权重: {use_learnable_weights}")
+        print(f"Shifted-convolution fusion configuration:")
+        print(f"  Input size: {img_size}")
+        print(f"  Patch size: {patch_size}")
+        print(f"  Stride: {stride}")
+        print(f"  Patch grid: {self.grid_h}x{self.grid_w} = {self.num_patches} patches")
+        print(f"  Learnable weights: {use_learnable_weights}")
 
     def _build_fusion_net(self):
 
@@ -464,11 +470,13 @@ class ShiftedConvFusion(nn.Module):
 
         B, N, C, ph, pw = patches.shape
 
-        assert N == self.num_patches, f"期望{self.num_patches}个patch，但得到{N}个"
-        assert C == self.in_chans, f"期望通道数{self.in_chans}，但得到{C}"
+        assert (
+            N == self.num_patches
+        ), f"Expected {self.num_patches} patches; received {N}"
+        assert C == self.in_chans, f"Expected {self.in_chans} channels; received {C}"
         assert (
             ph == self.patch_size[0] and pw == self.patch_size[1]
-        ), f"期望patch尺寸{self.patch_size}，但得到({ph},{pw})"
+        ), f"Expected patch size {self.patch_size}; received ({ph}, {pw})"
 
         if self.use_learnable_weights:
 
@@ -521,7 +529,7 @@ class JiTWithShiftedConv(nn.Module):
 
         assert (
             embed_dim % num_heads == 0
-        ), f"embed_dim({embed_dim})必须能被num_heads({num_heads})整除"
+        ), f"embed_dim ({embed_dim}) must be divisible by num_heads ({num_heads})"
 
         self.patch_embed = OverlapPatchEmbed(
             img_size=img_size,
@@ -569,17 +577,17 @@ class JiTWithShiftedConv(nn.Module):
 
         self.apply(self._init_weights)
 
-        print(f"\nJiT with ShiftedConv Fusion 模型配置:")
-        print(f"  输入尺寸: {img_size}")
-        print(f"  Patch大小: {patch_size}")
-        print(f"  重叠步长: {stride}")
-        print(f"  嵌入维度: {embed_dim}")
-        print(f"  Transformer深度: {depth}")
-        print(f"  注意力头数: {num_heads}")
-        print(f"  Head维度: {head_dim}")
-        print(f"  Patch数量: {num_patches}")
-        print(f"  输入输出通道: {in_chans}")
-        print(f"  观测维度: {obs_dim}")
+        print(f"\nJiT with ShiftedConv Fusion configuration:")
+        print(f"  Input size: {img_size}")
+        print(f"  Patch size: {patch_size}")
+        print(f"  Overlapping stride: {stride}")
+        print(f"  Embedding dimension: {embed_dim}")
+        print(f"  Transformer depth: {depth}")
+        print(f"  Attention heads: {num_heads}")
+        print(f"  Head dimension: {head_dim}")
+        print(f"  Number of patches: {num_patches}")
+        print(f"  Input/output channels: {in_chans}")
+        print(f"  Observation dimension: {obs_dim}")
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -600,14 +608,16 @@ class JiTWithShiftedConv(nn.Module):
 
         assert (
             H == self.original_img_size[0] and W == self.original_img_size[1]
-        ), f"输入图像尺寸应为{self.original_img_size}，但得到({H}, {W})"
-        assert C == self.in_chans, f"输入通道数应为{self.in_chans}，但得到{C}"
+        ), f"Expected input image size {self.original_img_size}; received ({H}, {W})"
+        assert (
+            C == self.in_chans
+        ), f"Expected {self.in_chans} input channels; received {C}"
         assert (
             len(t.shape) == 1 and t.shape[0] == B
-        ), f"时间步t的形状应为({B},)，但得到{t.shape}"
+        ), f"Expected time-step shape ({B},); received {t.shape}"
         assert (
             obs.shape[0] == B and obs.shape[1] == self.obs_dim
-        ), f"观测obs的形状应为({B}, {self.obs_dim})，但得到{obs.shape}"
+        ), f"Expected observation shape ({B}, {self.obs_dim}); received {obs.shape}"
 
         x_patches = self.patch_embed(x)
         x_patches = x_patches + self.pos_embed
@@ -627,10 +637,12 @@ class JiTWithShiftedConv(nn.Module):
 
         patch_pixels = patch_h * patch_w
         expected_dim = out_chans * patch_pixels
-        assert D == expected_dim, f"输出维度{D}与期望的{expected_dim}不匹配"
+        assert (
+            D == expected_dim
+        ), f"Output dimension {D} does not match expected dimension {expected_dim}"
         assert (
             N == self.patch_embed.num_patches
-        ), f"Patch数量{N}与预期{self.patch_embed.num_patches}不匹配"
+        ), f"Patch count {N} does not match expected count {self.patch_embed.num_patches}"
 
         patches = x_out.view(B, N, out_chans, patch_h, patch_w)
 
