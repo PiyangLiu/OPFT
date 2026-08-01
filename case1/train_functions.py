@@ -19,14 +19,7 @@ class FlowMatcher:
         self.special_value = -2.0
 
         self.well_coords = torch.tensor(
-            [
-                [14, 44],
-                [44, 14],
-                [24, 24],
-                [19, 38],
-                [39, 24],
-                [47, 15]
-            ],
+            [[14, 44], [44, 14], [24, 24], [19, 38], [39, 24], [47, 15]],
             dtype=torch.long,
         )
 
@@ -176,12 +169,10 @@ def save_model(
 
     if is_best:
         save_name = "model_best.pth"
-        save_info = f"✅ 最优模型 | Epoch: {epoch + 1} | {loss_type}_loss: {loss:.6f}"
+        save_info = f"Best model | Epoch: {epoch + 1} | {loss_type}_loss: {loss:.6f}"
     else:
         save_name = "model_final.pth"
-        save_info = (
-            f"📌 最后一轮模型 | Epoch: {epoch + 1} | {loss_type}_loss: {loss:.6f}"
-        )
+        save_info = f"Final model | Epoch: {epoch + 1} | {loss_type}_loss: {loss:.6f}"
 
     save_path = os.path.join(args.output_dir, save_name)
     os.makedirs(args.output_dir, exist_ok=True)
@@ -197,7 +188,7 @@ def save_model(
         },
         save_path,
     )
-    print(f"{save_info} | 保存路径: {save_path}")
+    print(f"{save_info} | saved to: {save_path}")
 
 
 def train_main(model, train_loader, val_loader, args):
@@ -211,14 +202,16 @@ def train_main(model, train_loader, val_loader, args):
     )
 
     if args.rank == 0:
-        print(f"开始训练 | 总轮数: {args.epochs}")
-        print(f"时间步参数: P_mean={flow_matcher.P_mean}, P_std={flow_matcher.P_std}")
-        print(f"噪声尺度: {flow_matcher.noise_scale}, t_eps: {flow_matcher.t_eps}")
+        print(f"Starting training | epochs: {args.epochs}")
         print(
-            f"标签丢弃概率: {flow_matcher.label_drop_prob}, 特殊值: {flow_matcher.special_value}"
+            f"Time-step parameters: P_mean={flow_matcher.P_mean}, P_std={flow_matcher.P_std}"
+        )
+        print(f"Noise scale: {flow_matcher.noise_scale}, t_eps: {flow_matcher.t_eps}")
+        print(
+            f"Condition-drop probability: {flow_matcher.label_drop_prob}, sentinel value: {flow_matcher.special_value}"
         )
         print(
-            f"井位数量: {len(flow_matcher.well_coords)}, 井位损失权重: {flow_matcher.well_loss_weight}"
+            f"Number of wells: {len(flow_matcher.well_coords)}, well-loss weight: {flow_matcher.well_loss_weight}"
         )
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
@@ -262,6 +255,5 @@ def train_main(model, train_loader, val_loader, args):
         save_model(
             model, ema, optimizer, args.epochs - 1, val_losses[-1], args, is_best=False
         )
-
 
     return train_losses, val_losses, best_val_loss
