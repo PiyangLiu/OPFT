@@ -258,7 +258,7 @@ class SwiGLUFFN(nn.Module):
         return self.w3(F.silu(x1) * x2)
 
 
-class JiTBlock(nn.Module):
+class OPFTBlock(nn.Module):
     def __init__(self, dim, num_heads, mlp_ratio=4.0, attn_drop=0.0, proj_drop=0.0):
         super().__init__()
         self.norm1 = RMSNorm(dim)
@@ -462,7 +462,7 @@ class ShiftedConvFusion(nn.Module):
         return output
 
 
-class JiTWithShiftedConv(nn.Module):
+class OPFT(nn.Module):
     def __init__(
         self,
         img_size=(60, 60),
@@ -523,7 +523,7 @@ class JiTWithShiftedConv(nn.Module):
 
         self.blocks = nn.ModuleList(
             [
-                JiTBlock(embed_dim, num_heads, mlp_ratio, attn_drop, proj_drop)
+                OPFTBlock(embed_dim, num_heads, mlp_ratio, attn_drop, proj_drop)
                 for _ in range(depth)
             ]
         )
@@ -541,7 +541,7 @@ class JiTWithShiftedConv(nn.Module):
 
         self.apply(self._init_weights)
 
-        print(f"\nJiT with ShiftedConv Fusion configuration:")
+        print("\nOPFT configuration:")
         print(f"  Input size: {img_size}")
         print(f"  Patch size: {patch_size}")
         print(f"  Overlapping stride: {stride}")
@@ -602,14 +602,14 @@ class JiTWithShiftedConv(nn.Module):
         return recon_img
 
 
-JiT_MODELS = {
-    "jit_small": lambda **kwargs: JiTWithShiftedConv(
+OPFT_MODELS = {
+    "OPFT_small": lambda **kwargs: OPFT(
         depth=4, num_heads=4, embed_dim=512, fusion_channels=64, **kwargs
     ),
-    "jit_shifted_conv_medium": lambda **kwargs: JiTWithShiftedConv(
+    "OPFT_medium": lambda **kwargs: OPFT(
         depth=12, num_heads=8, embed_dim=768, fusion_channels=96, **kwargs
     ),
-    "jit_shifted_conv_large": lambda **kwargs: JiTWithShiftedConv(
+    "OPFT_large": lambda **kwargs: OPFT(
         depth=24, num_heads=16, embed_dim=1024, fusion_channels=128, **kwargs
     ),
 }
