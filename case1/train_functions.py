@@ -9,10 +9,17 @@ import time
 
 class FlowMatcher:
     def __init__(
-        self, P_mean=-0.8, P_std=0.8, noise_scale=1.0, t_eps=5e-2, label_drop_prob=0.15
+        self,
+        t_min=0.0,
+        t_max=0.95,
+        noise_scale=1.0,
+        t_eps=5e-2,
+        label_drop_prob=0.15,
     ):
-        self.P_mean = P_mean
-        self.P_std = P_std
+        if not 0.0 <= t_min < t_max < 1.0:
+            raise ValueError("time-step bounds must satisfy 0 <= t_min < t_max < 1")
+        self.t_min = t_min
+        self.t_max = t_max
         self.noise_scale = noise_scale
         self.t_eps = t_eps
         self.label_drop_prob = label_drop_prob
@@ -26,9 +33,9 @@ class FlowMatcher:
         self.well_loss_weight = 3.0
 
     def sample_t(self, batch_size, device):
-
-        z = torch.randn(batch_size, device=device) * self.P_std + self.P_mean
-        return torch.sigmoid(z)
+        return self.t_min + (self.t_max - self.t_min) * torch.rand(
+            batch_size, device=device
+        )
 
     def drop_labels(self, labels, is_training):
 
@@ -194,8 +201,8 @@ def save_model(
 def train_main(model, train_loader, val_loader, args):
 
     flow_matcher = FlowMatcher(
-        P_mean=getattr(args, "P_mean", -0.8),
-        P_std=getattr(args, "P_std", 0.8),
+        t_min=getattr(args, "t_min", 0.0),
+        t_max=getattr(args, "t_max", 0.95),
         noise_scale=args.noise_scale,
         t_eps=args.t_eps,
         label_drop_prob=getattr(args, "label_drop_prob", 0.15),
@@ -203,9 +210,7 @@ def train_main(model, train_loader, val_loader, args):
 
     if args.rank == 0:
         print(f"Starting training | epochs: {args.epochs}")
-        print(
-            f"Time-step parameters: P_mean={flow_matcher.P_mean}, P_std={flow_matcher.P_std}"
-        )
+        print(f"Time-step distribution: U({flow_matcher.t_min}, {flow_matcher.t_max})")
         print(f"Noise scale: {flow_matcher.noise_scale}, t_eps: {flow_matcher.t_eps}")
         print(
             f"Condition-drop probability: {flow_matcher.label_drop_prob}, sentinel value: {flow_matcher.special_value}"

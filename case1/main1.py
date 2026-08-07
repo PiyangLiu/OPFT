@@ -86,9 +86,7 @@ def get_params():
     parser.add_argument(
         "--epochs", type=int, default=500, help="Number of training epochs"
     )
-    parser.add_argument(
-        "--ema_decay", type=float, default=0.999, help="EMA decay rate"
-    )
+    parser.add_argument("--ema_decay", type=float, default=0.999, help="EMA decay rate")
     parser.add_argument(
         "--weight_decay", type=float, default=1e-4, help="AdamW weight decay"
     )
@@ -111,16 +109,10 @@ def get_params():
     )
 
     parser.add_argument(
-        "--P_mean",
-        type=float,
-        default=-0.8,
-        help="Mean parameter for time-step sampling",
+        "--t_min", type=float, default=0.0, help="Lower time-step sampling bound"
     )
     parser.add_argument(
-        "--P_std",
-        type=float,
-        default=0.8,
-        help="Standard-deviation parameter for time-step sampling",
+        "--t_max", type=float, default=0.95, help="Upper time-step sampling bound"
     )
     parser.add_argument(
         "--label_drop_prob", type=float, default=0, help="Condition-drop probability"
@@ -521,7 +513,7 @@ def main():
         ).to(config.device)
 
         print(f"Training configuration:")
-        print(f"  - Time-step parameters: P_mean={args.P_mean}, P_std={args.P_std}")
+        print(f"  - Time-step distribution: U({args.t_min}, {args.t_max})")
         print(
             f"  - Condition-drop probability: {args.label_drop_prob} (fixed unconditional sentinel)"
         )
