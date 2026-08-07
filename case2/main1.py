@@ -87,7 +87,7 @@ def get_params():
         "--epochs", type=int, default=500, help="Number of training epochs"
     )
     parser.add_argument(
-        "--ema_decay", type=float, default=0.9999, help="EMA decay rate"
+        "--ema_decay", type=float, default=0.999, help="EMA decay rate"
     )
     parser.add_argument(
         "--weight_decay", type=float, default=1e-4, help="AdamW weight decay"
@@ -117,7 +117,7 @@ def get_params():
         "--t_max", type=float, default=0.95, help="Upper time-step sampling bound"
     )
     parser.add_argument(
-        "--label_drop_prob", type=float, default=0.15, help="Condition-drop probability"
+        "--label_drop_prob", type=float, default=0, help="Condition-drop probability"
     )
     parser.add_argument(
         "--cfg_scale", type=float, default=1, help="Classifier-free guidance scale"
@@ -136,7 +136,7 @@ def get_params():
     )
 
     parser.add_argument(
-        "--num_steps", type=int, default=15, help="Number of ODE integration steps"
+        "--num_steps", type=int, default=30, help="Number of ODE integration steps"
     )
     parser.add_argument(
         "--noise_scale", type=float, default=1, help="Initial noise scale"
@@ -144,7 +144,7 @@ def get_params():
     parser.add_argument(
         "--integrate_method",
         type=str,
-        default="rk4",
+        default="euler",
         choices=["euler", "heun", "rk4"],
         help="ODE integration method",
     )
