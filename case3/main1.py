@@ -22,7 +22,7 @@ class Config:
     channels = 5
     cond_dim = 1000
     ts_feature = [50, 20]
-    batch_size = 48
+    batch_size = 32
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     eps = 1e-8
     train_num = [0, 1000]
@@ -48,7 +48,7 @@ def get_params():
     parser.add_argument(
         "--batchsize",
         type=int,
-        default=48,
+        default=32,
         help="Batch size; reduce it if GPU memory is insufficient",
     )
     parser.add_argument(
@@ -104,7 +104,7 @@ def get_params():
     parser.add_argument(
         "--epochs",
         type=int,
-        default=150,
+        default=500,
         help="Number of training epochs",
     )
     parser.add_argument(
@@ -155,7 +155,7 @@ def get_params():
     parser.add_argument(
         "--label_drop_prob",
         type=float,
-        default=0.15,
+        default=0,
         help="Condition-drop probability",
     )
     parser.add_argument(
@@ -186,7 +186,7 @@ def get_params():
     parser.add_argument(
         "--integrate_method",
         type=str,
-        default="rk4",
+        default="euler",
         choices=["euler", "heun", "euler"],
         help="ODE integration method: euler, heun, or rk4",
     )
