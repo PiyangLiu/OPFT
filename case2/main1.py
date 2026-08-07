@@ -87,7 +87,7 @@ def get_params():
         "--epochs", type=int, default=500, help="Number of training epochs"
     )
     parser.add_argument(
-        "--ema_decay", type=float, default=0.9999, help="EMA decay rate"
+        "--ema_decay", type=float, default=0.999, help="EMA decay rate"
     )
     parser.add_argument(
         "--weight_decay", type=float, default=1e-4, help="AdamW weight decay"
@@ -123,7 +123,7 @@ def get_params():
         help="Standard-deviation parameter for time-step sampling",
     )
     parser.add_argument(
-        "--label_drop_prob", type=float, default=0.15, help="Condition-drop probability"
+        "--label_drop_prob", type=float, default=0, help="Condition-drop probability"
     )
     parser.add_argument(
         "--cfg_scale", type=float, default=1, help="Classifier-free guidance scale"
